@@ -43,3 +43,105 @@ find SSLCertificateKeyFile
 
 # As root restart httpd
 systemctl restart httpd
+
+___________________________________________________________________________
+
+Creating a simple web page for your Apache installation:
+
+ 
+
+Go to /var/www/html as root 
+
+Pro Tip: This is the default root directory of the web server, which you will use frequently!
+
+Use vi to create a file called index.html. Also once done, you'll need save the file before anything html can be seen!
+
+VI Help Sheet Download VI Help Sheet
+
+Create a html doc using the follow as guideline
+
+<html>
+<head>
+<title>
+Title goes here
+</title>
+</head>
+<body>
+stuff goes here
+</body>
+</html>
+
+Tips: vi reminder (vi the_filename) will open the file in insert mode:
+
+ESC will take you out of Insert Mode
+Pressing the "i" key will put you back in Insert Mode
+When all changes are done: ESC (to exit Insert Mode) then ":" will put you in Command Mode then "wq" to write-quit (save) the file.
+Can you see the page from your workstation's browser?
+
+__________________________________________________________________________________________________
+
+For this lab, you are going to configure a Certificate Authority using OpenSSL.  You will then request a certificate from a separate web server - and use your CA to issue that certificate.
+
+The basic commands are included below.  Pay attention to the file paths as CentOS has specific locations it uses by default for PKI (Links to an external site.) related files.
+
+Outcomes and Submission:
+
+For each step, should decode the OpenSSL commands and describe the command arguments: 
+Create a functioning CA and issue a certificate for a web server
+So using 2 VMs total: one a Web Server (make sure it's on default port 80), and another a Cert Authority.
+
+* Tips: Some common items to troubleshoot: syntax, file names, passwords, file paths, access, error messages, logs
+
+ 
+I. Create the Certificate Authority
+
+On the CentOS server you configured -
+
+1. File system prep
+
+cd /etc/pki/CA
+touch index.txt   (CA uses to keep track of certs)
+echo 1000 > serial  (used to assign serial #’s to certs)
+ 
+
+2. Create your CA's private key - use the filenames as indicated
+
+openssl genrsa -des3 -out private/cakey.pem 2048
+Describe this step and what the command arguments mean 
+
+3. Create your CA certificate
+
+openssl req -new -x509 -days 365 -key private/cakey.pem -out cacert.pem
+Fill out the prompts + record your entries
+Make sure to use Skiff101  as organization name, org unit name, and common name when prompted
+Describe this step and what the command arguments mean 
+ 
+
+II. Create the certificate request on your web server
+(*New VM or you can use a previous VM with Apache, just be mindful of previous configurations!)
+
+1. Generate a private key for the web server and a certificate request file
+
+openssl req -newkey rsa:2048 -keyout websrv.key -out websrv.csr
+Make sure your entries here match those from above
+Do not need the 'extra' attributes
+Make sure to record the password you set for the private key - you will need it for later labs!
+Describe this step and what the command arguments mean
+2. SCP the csr file to the Certificate Authority (see http://www.hypexr.org/linux_scp_help.php (Links to an external site.) for SCP syntax, and landing it in /tmp first and then mv'ing where needed = win)
+
+ 
+
+III. Sign the certificate on the Certificate Authority
+
+On the Certificate Authority Server
+
+openssl ca -out websrv.crt -infiles websrv.csr
+Describe this step and what the command arguments mean
+Good measure, do a ls -l and cat the new .crt file for due diligence
+Using SCP, transfer the websrv.crt file back to the web server.
+
+IV. Submit as screenshots with descriptions cat outputs of:
+
+cacert.pem
+websrv.key
+websrv.crt 
